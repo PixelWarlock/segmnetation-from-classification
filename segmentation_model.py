@@ -5,6 +5,6 @@ def get_unet(in_channels:int, out_channels:int, encoder_name='resnet34', activat
         encoder_name=encoder_name,
         encoder_weights='imagenet',
         in_channels=in_channels,
-        out_channels=out_channels,
+        classes=out_channels,
         activation=activation
     )

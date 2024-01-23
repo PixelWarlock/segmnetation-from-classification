@@ -12,8 +12,9 @@ class Classifier(nn.Module):
         self.conv1 = nn.Conv2d(in_channels=in_channels, out_channels=32, kernel_size=3)
         self.conv2 = nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3)
         self.conv3 = nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3)
+        self.conv4 = nn.Conv2d(in_channels=32, out_channels=8, kernel_size=3)
 
-        self.linear = nn.Linear(in_features=2,out_features=num_classes)
+        self.linear = nn.Linear(in_features=1152,out_features=num_classes)
     def forward(self, x):
         x = self.conv1(x)
         x = self.relu(x)
@@ -27,6 +28,11 @@ class Classifier(nn.Module):
         x = self.relu(x)
         x = self.maxpool(x)
 
+        x = self.conv4(x)
+        x = self.relu(x)
+        x = self.maxpool(x)
+
         x = torch.flatten(x, start_dim=1)
+        x = self.linear(x)
         x = self.activation(x)
         return x
