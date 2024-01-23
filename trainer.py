@@ -28,4 +28,6 @@ class Trainer:
         
         valid_dataloader = DataLoader(dataset=validation_dataset,
                                       batch_size=batch_size,
-                                      )
+                                      shuffle=False)
+
+        
