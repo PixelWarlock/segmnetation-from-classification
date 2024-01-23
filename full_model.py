@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 
 class FullModel(nn.Module):
@@ -9,6 +10,7 @@ class FullModel(nn.Module):
         self.classifier = classifier
     
     def forward(self, x):
-        x = self.segmentor(x)
-        x = self.classifier(x)
-        return x
+        z = self.segmentor(x)
+        k = torch.round(x) * z
+        y = self.classifier(k)
+        return y

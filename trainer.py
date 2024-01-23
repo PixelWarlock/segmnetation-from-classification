@@ -1,3 +1,4 @@
+import os
 import torch
 from dataset import AnimalsDataset
 from torch.utils.data import DataLoader
@@ -5,8 +6,8 @@ from classification_model import Classifier
 from full_model import FullModel
 from transformations import get_tfms
 from segmentation_model import get_unet
-from tqdm import tqdm
 import numpy as np
+from tqdm import tqdm
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -14,6 +15,8 @@ class Trainer:
 
     @staticmethod
     def step(model, dataloader, criterion, optimizer, mode):
+        pbar = tqdm(total=dataloader.__len__())
+
         losses = list()
         if mode == 'train':
             for img, label in dataloader:
@@ -28,6 +31,7 @@ class Trainer:
                 loss.backward()
                 optimizer.step()
                 losses.append(loss.item())
+                pbar.update()
 
         elif mode == 'valid':
             model.eval()
@@ -39,7 +43,9 @@ class Trainer:
                     probs = model(img)
                     loss  = criterion(probs, label)
                     losses.append(loss.item())
+                    pbar.update()
             model.train()
+        pbar.close()
         return losses
 
     def run(batch_size:int,
@@ -63,7 +69,7 @@ class Trainer:
                                       shuffle=False)
 
         segmentor = get_unet(in_channels=3, out_channels=1)
-        classifier = Classifier(num_classes=5)
+        classifier = Classifier(num_classes=5, in_channels=3)
 
         full_model = FullModel(
             segmentor=segmentor,
@@ -71,7 +77,7 @@ class Trainer:
         ).to(device)
 
         criterion = torch.nn.CrossEntropyLoss()
-        optimizer = torch.optim.AdamW(full_model.parameters(), lr=0.0003)
+        optimizer = torch.optim.Adam(full_model.parameters(), lr=0.001)
 
         for epoch in range(epochs):
             train_losses=Trainer.step(model=full_model,
@@ -88,6 +94,8 @@ class Trainer:
             
             print(f"Epoch: {epoch} | Train loss: {np.mean(train_losses)} | Valid loss: {np.mean(valid_losses)}")
             print(100*'-')
-            
+
+            torch.save(full_model.classifier.state_dict(), os.path.join(os.getcwd(), f"models/classifiers/classifier_{epoch}.pt"))
+            torch.save(full_model.segmentor.state_dict(), os.path.join(os.getcwd(), f"models/segmentors/segmentor_{epoch}.pt"))
 
 

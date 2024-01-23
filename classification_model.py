@@ -7,7 +7,7 @@ class Classifier(nn.Module):
 
         self.maxpool = nn.MaxPool2d(kernel_size=2)
         self.relu = nn.ReLU()
-        self.activation = nn.Softmax()
+        self.activation = nn.Softmax(dim=1)
 
         self.conv1 = nn.Conv2d(in_channels=in_channels, out_channels=32, kernel_size=3)
         self.conv2 = nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3)
