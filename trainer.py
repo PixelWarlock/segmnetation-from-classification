@@ -1,8 +1,9 @@
 import os
 import torch
+import pandas as pd
 from dataset import AnimalsDataset
 from torch.utils.data import DataLoader
-from classification_model import Classifier
+from classification_model import get_efficientnet_b0 #Classifier
 from full_model import FullModel
 from transformations import get_tfms
 from segmentation_model import get_unet
@@ -69,7 +70,7 @@ class Trainer:
                                       shuffle=False)
 
         segmentor = get_unet(in_channels=3, out_channels=1)
-        classifier = Classifier(num_classes=5, in_channels=3)
+        classifier = get_efficientnet_b0(num_classes=5) #Classifier(num_classes=5, in_channels=3)
 
         full_model = FullModel(
             segmentor=segmentor,
@@ -77,7 +78,8 @@ class Trainer:
         ).to(device)
 
         criterion = torch.nn.CrossEntropyLoss()
-        optimizer = torch.optim.Adam(full_model.parameters(), lr=0.001)
+        optimizer = torch.optim.Adam(full_model.parameters(), lr=0.0005)
+        df = pd.DataFrame(columns=['Epoch', 'Train loss', 'Valid loss'])
 
         for epoch in range(epochs):
             train_losses=Trainer.step(model=full_model,
@@ -92,10 +94,15 @@ class Trainer:
                          optimizer=optimizer,
                          mode='valid')
             
-            print(f"Epoch: {epoch} | Train loss: {np.mean(train_losses)} | Valid loss: {np.mean(valid_losses)}")
+            train_loss = np.mean(train_losses)
+            valid_loss = np.mean(valid_losses)
+
+            print(f"Epoch: {epoch} | Train loss: {train_loss} | Valid loss: {valid_loss}")
             print(100*'-')
+
+            df.loc[len(df.index)] = [epoch, train_loss, valid_loss]
 
             torch.save(full_model.classifier.state_dict(), os.path.join(os.getcwd(), f"models/classifiers/classifier_{epoch}.pt"))
             torch.save(full_model.segmentor.state_dict(), os.path.join(os.getcwd(), f"models/segmentors/segmentor_{epoch}.pt"))
 
-
+        df.to_csv(os.path.join(os.getcwd(), "results.csv"))

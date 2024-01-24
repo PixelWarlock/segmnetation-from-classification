@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-
+"""
 class Classifier(nn.Module):
     def __init__(self, num_classes, in_channels:int=1):
         super(Classifier, self).__init__()
@@ -36,3 +36,18 @@ class Classifier(nn.Module):
         x = self.linear(x)
         x = self.activation(x)
         return x
+"""
+
+def get_efficientnet_b0(num_classes):
+    backbone = torch.hub.load(
+            'rwightman/gen-efficientnet-pytorch',
+            'efficientnet_b1',
+            pretrained=True,
+        )
+    backbone = nn.Sequential(*list(backbone.as_sequential())[:-1]) 
+    model = nn.Sequential(*[
+        backbone,
+        nn.Linear(in_features=1280, out_features=num_classes, bias=True),
+        nn.Softmax(dim=1)
+    ])
+    return model
