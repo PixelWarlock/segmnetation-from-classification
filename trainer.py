@@ -3,7 +3,7 @@ import torch
 import pandas as pd
 from dataset import AnimalsDataset
 from torch.utils.data import DataLoader
-from classification_model import get_efficientnet_b0 #Classifier
+from classification_model import get_efficientnet_b0, Classifier
 from full_model import FullModel
 from transformations import get_tfms
 from segmentation_model import get_unet
@@ -70,7 +70,7 @@ class Trainer:
                                       shuffle=False)
 
         segmentor = get_unet(in_channels=3, out_channels=1)
-        classifier = get_efficientnet_b0(num_classes=5) #Classifier(num_classes=5, in_channels=3)
+        classifier = Classifier(num_classes=5, in_channels=1) #get_efficientnet_b0(num_classes=5) #
 
         full_model = FullModel(
             segmentor=segmentor,
@@ -78,7 +78,7 @@ class Trainer:
         ).to(device)
 
         criterion = torch.nn.CrossEntropyLoss()
-        optimizer = torch.optim.Adam(full_model.parameters(), lr=0.0005)
+        optimizer = torch.optim.Adam(full_model.parameters(), lr=0.003)
         df = pd.DataFrame(columns=['Epoch', 'Train loss', 'Valid loss'])
 
         for epoch in range(epochs):
